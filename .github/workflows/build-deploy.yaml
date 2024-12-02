@@ -16,17 +16,17 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Set up Docker Compose
-      run: docker-compose version
+      run: docker compose version
 
     - name: Build and Run Services
       run: |
-        docker-compose up --build -d
-        docker-compose ps
+        docker compose up --build -d
+        docker compose ps
 
     - name: Wait for Services to Be Ready
       run: |
         # Wait for PostgreSQL to be healthy
-        while ! docker-compose exec -T postgres pg_isready -U postgres -d postgres; do
+        while ! docker compose exec -T postgres pg_isready -U postgres -d postgres; do
           echo "Waiting for PostgreSQL to be ready..."
           sleep 5
         done
@@ -34,7 +34,7 @@ jobs:
 
     - name: Run Tests
       run: |
-        docker-compose run --rm test
+        docker compose run --rm test
       env:
         POSTGRES_HOST: postgres
         POSTGRES_DB: postgres
