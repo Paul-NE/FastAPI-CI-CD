@@ -1,0 +1,61 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Compose
+      run: docker-compose version
+
+    - name: Build and Run Services
+      run: |
+        docker-compose up --build -d
+        docker-compose ps
+
+    - name: Wait for Services to Be Ready
+      run: |
+        # Wait for PostgreSQL to be healthy
+        while ! docker-compose exec -T postgres pg_isready -U postgres -d postgres; do
+          echo "Waiting for PostgreSQL to be ready..."
+          sleep 5
+        done
+        echo "PostgreSQL is ready!"
+
+    - name: Run Tests
+      run: |
+        docker-compose run --rm test
+      env:
+        POSTGRES_HOST: postgres
+        POSTGRES_DB: postgres
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+
+    - name: Tear Down Services
+      if: always()
+      run: docker-compose down --volumes
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Deploy Application
+      run: |
+        # Add your deployment steps here (e.g., pushing Docker images to a registry,
+        # deploying to a Kubernetes cluster, or restarting a remote Docker instance)
+        echo "Deployment steps go here"
